@@ -16,7 +16,7 @@ class ProductCRUD:
         product = Product(**product_in.model_dump())
         session.add(product)
         await session.commit()
-        await session.refresh(product, attribute_names=['files'])
+        await session.refresh(product)
         return product
 
     @staticmethod
@@ -73,7 +73,7 @@ class ProductCRUD:
             setattr(product, field, value)
         
         await session.commit()
-        await session.refresh(product, attribute_names=['files'])
+        await session.refresh(product)
         return product
 
     @staticmethod

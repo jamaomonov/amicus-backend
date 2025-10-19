@@ -166,7 +166,9 @@ async def upload_product_image(
     # Обновляем путь к изображению в БД
     product.image = image_path
     await session.commit()
-    await session.refresh(product, attribute_names=['files'])
     
-    return product
+    # Заново получаем продукт с загруженными файлами
+    updated_product = await product_crud.get_by_id(session, product_id)
+    
+    return updated_product
 
