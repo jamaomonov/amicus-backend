@@ -21,7 +21,7 @@ class Product(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
-    image = Column(String, nullable=False)
+    image = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     # Many products can belong to one category

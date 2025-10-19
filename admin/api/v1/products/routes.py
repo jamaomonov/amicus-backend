@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, status, Query, UploadFile, File
 
 from admin.api.v1.dependencies import DBSession
 from admin.api.v1.utils.file_utils import save_product_image, delete_product_image
+from admin.api.v1.categories.crud import category_crud
 from .crud import product_crud
 from .schemas import (
     ProductCreate,
@@ -25,6 +26,13 @@ async def create_product(
     session: DBSession
 ):
     """Создать новый продукт"""
+    # Проверяем существование категории
+    category = await category_crud.get_by_id(session, product_in.category_id)
+    if not category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Категория с ID {product_in.category_id} не найдена"
+        )
     return await product_crud.create(session, product_in)
 
 
@@ -87,6 +95,16 @@ async def update_product(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Продукт с ID {product_id} не найден"
         )
+    
+    # Проверяем существование категории, если она обновляется
+    if product_update.category_id is not None:
+        category = await category_crud.get_by_id(session, product_update.category_id)
+        if not category:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Категория с ID {product_update.category_id} не найдена"
+            )
+    
     return await product_crud.update(session, product, product_update)
 
 
@@ -148,7 +166,7 @@ async def upload_product_image(
     # Обновляем путь к изображению в БД
     product.image = image_path
     await session.commit()
-    await session.refresh(product)
+    await session.refresh(product, attribute_names=['files'])
     
     return product
 

@@ -1,6 +1,7 @@
 from typing import Optional
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from core.models.models import Product
 from .schemas import ProductCreate, ProductUpdate
@@ -15,14 +16,16 @@ class ProductCRUD:
         product = Product(**product_in.model_dump())
         session.add(product)
         await session.commit()
-        await session.refresh(product)
+        await session.refresh(product, attribute_names=['files'])
         return product
 
     @staticmethod
     async def get_by_id(session: AsyncSession, product_id: int) -> Optional[Product]:
         """Получить продукт по ID"""
         result = await session.execute(
-            select(Product).where(Product.id == product_id)
+            select(Product)
+            .options(selectinload(Product.files))
+            .where(Product.id == product_id)
         )
         return result.scalar_one_or_none()
 
@@ -36,7 +39,7 @@ class ProductCRUD:
     ) -> tuple[list[Product], int]:
         """Получить список всех продуктов с пагинацией и фильтрацией"""
         # Базовый запрос
-        query = select(Product)
+        query = select(Product).options(selectinload(Product.files))
         count_query = select(func.count(Product.id))
         
         # Применяем фильтры
@@ -70,7 +73,7 @@ class ProductCRUD:
             setattr(product, field, value)
         
         await session.commit()
-        await session.refresh(product)
+        await session.refresh(product, attribute_names=['files'])
         return product
 
     @staticmethod

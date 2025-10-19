@@ -1,15 +1,15 @@
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from typing import Optional, List
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProductBase(BaseModel):
     """Базовая схема для продукта"""
     name: str
     description: Optional[str] = None
-    image: str
+    image: Optional[str] = None
     is_active: bool = True
-    category_id: int
+    category_id: int = Field(..., gt=0, description="ID категории (должен быть больше 0)")
 
 
 class ProductCreate(ProductBase):
@@ -23,7 +23,18 @@ class ProductUpdate(BaseModel):
     description: Optional[str] = None
     image: Optional[str] = None
     is_active: Optional[bool] = None
-    category_id: Optional[int] = None
+    category_id: Optional[int] = Field(None, gt=0, description="ID категории (должен быть больше 0)")
+
+
+class FileInProduct(BaseModel):
+    """Схема файла в продукте"""
+    id: int
+    name: str
+    path: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProductResponse(ProductBase):
@@ -31,6 +42,7 @@ class ProductResponse(ProductBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    files: List[FileInProduct] = []
 
     model_config = ConfigDict(from_attributes=True)
 
